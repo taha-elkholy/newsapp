@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_news_app/layout/news_layout/cubit/cubit.dart';
 import 'package:my_news_app/layout/news_layout/cubit/states.dart';
 import 'package:my_news_app/modules/search/search_screen.dart';
-import 'package:my_news_app/shared/components/componentes.dart';
+import 'package:my_news_app/shared/components/components.dart';
 
 class NewsLayout extends StatelessWidget {
   const NewsLayout({Key? key}) : super(key: key);
@@ -15,34 +15,44 @@ class NewsLayout extends StatelessWidget {
       listener: (context, state) {},
       builder: (context, state) {
         NewsCubit cubit = NewsCubit.get(context);
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(cubit.titles[cubit.currentIndex]),
-            actions: [
-              IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: () {
-                    navigateTo(context, SearchScreen());
-                  }),
-              IconButton(
-                  icon: Icon(Icons.brightness_4_outlined),
-                  onPressed: () {
-                    NewsCubit.get(context).changeAppMode();
-                  }),
-            ],
-          ),
-          body: ConditionalBuilder(
-              condition: true,
-              builder: (context) => cubit.screens[cubit.currentIndex],
-              fallback: (context) => Center(
-                    child: CircularProgressIndicator(),
-                  )),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: cubit.currentIndex,
-            onTap: (index) {
-              cubit.changeBottomNaveBarIndex(index);
-            },
-            items: cubit.bottomNavItems,
+        return WillPopScope(
+          onWillPop: () async {
+            if (cubit.currentIndex != 0) {
+              cubit.changeBottomNaveBarIndex(0);
+              return false;
+            } else {
+              return true;
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(cubit.titles[cubit.currentIndex]),
+              actions: [
+                IconButton(
+                    icon: Icon(Icons.search),
+                    onPressed: () {
+                      navigateTo(context, SearchScreen());
+                    }),
+                IconButton(
+                    icon: Icon(Icons.brightness_4_outlined),
+                    onPressed: () {
+                      NewsCubit.get(context).changeAppMode();
+                    }),
+              ],
+            ),
+            body: ConditionalBuilder(
+                condition: cubit.business.isNotEmpty,
+                builder: (context) => cubit.screens[cubit.currentIndex],
+                fallback: (context) => Center(
+                      child: CircularProgressIndicator(),
+                    )),
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: cubit.currentIndex,
+              onTap: (index) {
+                cubit.changeBottomNaveBarIndex(index);
+              },
+              items: cubit.bottomNavItems,
+            ),
           ),
         );
       },

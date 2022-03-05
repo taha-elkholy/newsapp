@@ -1,31 +1,52 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:conditional_builder_null_safety/conditional_builder_null_safety.dart';
 import 'package:flutter/material.dart';
+import 'package:my_news_app/models/news_model.dart';
 import 'package:my_news_app/modules/webview/news_webview.dart';
 
-Widget buildArticleItem(context, article) => InkWell(
+Widget buildArticleItem(context, Article article) => InkWell(
       onTap: () {
-        navigateTo(context, NewsWebView(article['url']));
+        if (article.url != null) {
+          navigateTo(context, NewsWebView(article.url!));
+        } else {
+          showSnackBar(context, 'No Url for this Article');
+        }
       },
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Row(
           children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                image: article['urlToImage'] != null
-                    ? DecorationImage(
-                        image: NetworkImage('${article['urlToImage']}'),
-                        fit: BoxFit.cover)
-                    : DecorationImage(
-                        image: NetworkImage(
-
-                            // default image if the source image is null
-
-                            'https://guidesaudi.com/Images/Logo/GuideSaudi/default.png'),
-                      ),
+            ConditionalBuilder(
+              condition: article.urlToImage != null,
+              builder: (context) => CachedNetworkImage(
+                imageUrl: article.urlToImage!,
+                imageBuilder: (context, imageProvider) => Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                        image: imageProvider,
+                        fit: BoxFit.cover,
+                        colorFilter:
+                            ColorFilter.mode(Colors.red, BlendMode.colorBurn)),
+                  ),
+                ),
+                placeholder: (context, url) => SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: Center(child: CircularProgressIndicator())),
+                errorWidget: (context, url, error) =>
+                    Center(child: Icon(Icons.error)),
+              ),
+              fallback: (context) => SizedBox(
+                width: 100,
+                height: 100,
+                child: Center(
+                  child: Icon(
+                    Icons.error,
+                    size: 30,
+                  ),
+                ),
               ),
             ),
             SizedBox(
@@ -41,14 +62,16 @@ Widget buildArticleItem(context, article) => InkWell(
                   children: [
                     Expanded(
                       child: Text(
-                        '${article['title']}',
+                        article.title != null ? '${article.title}' : 'no title',
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyText1,
                       ),
                     ),
                     Text(
-                      '${article['publishedAt']}',
+                      article.publishedAt != null
+                          ? '${article.publishedAt}'
+                          : '',
                       style: TextStyle(color: Colors.grey),
                     )
                   ],
@@ -60,7 +83,8 @@ Widget buildArticleItem(context, article) => InkWell(
       ),
     );
 
-Widget articleBuilder(list, {isSearch = false}) => ConditionalBuilder(
+Widget articleBuilder(List<Article> list, {isSearch = false}) =>
+    ConditionalBuilder(
       condition: list.length > 0,
       builder: (context) {
         return ListView.separated(
@@ -96,7 +120,7 @@ Widget defaultTextFormField({
   IconData? suffix,
   Function()? onSuffixPressed,
   Function()? onTap,
-  Function(String s)? onchanged,
+  Function(String s)? onChanged,
   bool obscure = false,
 }) =>
     TextFormField(
@@ -105,7 +129,7 @@ Widget defaultTextFormField({
       cursorColor: Colors.deepOrange,
       obscureText: obscure,
       onTap: onTap,
-      onChanged: onchanged,
+      onChanged: onChanged,
       textCapitalization: TextCapitalization.sentences,
       style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
@@ -134,3 +158,7 @@ Widget defaultTextFormField({
 
 void navigateTo(context, widget) =>
     Navigator.push(context, MaterialPageRoute(builder: (context) => widget));
+
+void showSnackBar(context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+}

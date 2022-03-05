@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_news_app/layout/news_layout/cubit/cubit.dart';
 import 'package:my_news_app/layout/news_layout/cubit/states.dart';
-import 'package:my_news_app/shared/components/componentes.dart';
+import 'package:my_news_app/shared/components/components.dart';
 
 class SearchScreen extends StatelessWidget {
   SearchScreen({Key? key}) : super(key: key);
@@ -14,7 +14,6 @@ class SearchScreen extends StatelessWidget {
     return BlocConsumer<NewsCubit, NewsStates>(
       listener: (context, state) {},
       builder: (context, state) {
-        var list = NewsCubit.get(context).search;
         return Scaffold(
           appBar: AppBar(
             title: Text('Search'),
@@ -30,14 +29,16 @@ class SearchScreen extends StatelessWidget {
                         return 'Search required';
                       }
                     },
-                    onchanged: (value) {
+                    onChanged: (value) {
                       NewsCubit.get(context).getSearch(value: value);
                     },
                     inputType: TextInputType.text,
                     label: 'Search',
                     prefix: Icons.search),
               ),
-              Expanded(child: articleBuilder(list, isSearch: true)),
+              Expanded(
+                  child: articleBuilder(NewsCubit.get(context).search,
+                      isSearch: true)),
             ],
           ),
         );

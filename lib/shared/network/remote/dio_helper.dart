@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:my_news_app/shared/components/constants.dart';
 
 // don't forget to init this class in your runApp method
 class DioHelper {
@@ -9,13 +10,35 @@ class DioHelper {
   static init() {
     dio = Dio(
       BaseOptions(
-          baseUrl: 'https://newsapi.org/', receiveDataWhenStatusError: true),
+        baseUrl: baseUrl,
+        receiveDataWhenStatusError: true,
+      ),
+    );
+  }
+
+  //get headline news for egypt
+  static Future<Response> getNews({
+    required String category,
+  }) async {
+    return await dio.get(
+      headlinesPath,
+      queryParameters: {
+        'category': category,
+        'country': egypt,
+        'apikey': apiKey,
+      },
     );
   }
 
   // get data
-  static Future<Response> getData(
-      {required String url, required Map<String, dynamic> query}) async {
-    return await dio.get(url, queryParameters: query);
+  static Future<Response> searchNews({required String searchValue}) async {
+    return await dio.get(
+      everythingPath,
+      queryParameters: {
+        'q': searchValue,
+        'sortBy': 'publishedAt',
+        'apikey': apiKey,
+      },
+    );
   }
 }

@@ -1,12 +1,12 @@
-import 'package:bloc/bloc.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_news_app/layout/news_layout/cubit/states.dart';
+import 'package:my_news_app/models/news_model.dart';
 import 'package:my_news_app/modules/business/business_screen.dart';
 import 'package:my_news_app/modules/science/science_screen.dart';
 import 'package:my_news_app/modules/sports/sports_screen.dart';
-import 'package:my_news_app/shared/network/local/cach_helper.dart';
+import 'package:my_news_app/shared/components/constants.dart';
+import 'package:my_news_app/shared/network/local/cache_helper.dart';
 import 'package:my_news_app/shared/network/remote/dio_helper.dart';
 
 class NewsCubit extends Cubit<NewsStates> {
@@ -83,81 +83,64 @@ class NewsCubit extends Cubit<NewsStates> {
   }
 
   // List of business articles
-  List<dynamic> business = [];
+  List<Article> business = [];
 
   void getBusiness() {
     //loading
     emit(NewsGetBusinessLoadingState());
-    if (business.length == 0) {
-      DioHelper.getData(url: 'v2/top-headlines', query: {
-        'country': 'eg',
-        'category': 'business',
-        'apikey': '875465faa7d94a638da55e846be8701b',
-      }).then((value) {
-        business = value.data['articles'];
-        emit(NewsGetBusinessSuccessState());
-        print('success');
-      }).catchError((error) {
-        emit(NewsGetBusinessErrorState(error.toString()));
-        print('Error is : ${error.toString()}');
-      });
-    } else {
+    business = [];
+    DioHelper.getNews(category: businessEndPoint).then((value) {
+      print('business value $value');
+      var _model = NewsModel.fromJson(value.data);
+      business.addAll(_model.articles);
+      print('business length: ${business.length}');
       emit(NewsGetBusinessSuccessState());
-    }
+    }).catchError((error) {
+      emit(NewsGetBusinessErrorState(error.toString()));
+      print('Error is : ${error.toString()}');
+    });
   }
 
   // List of business articles
-  List<dynamic> science = [];
+  List<Article> science = [];
 
   void getScience() {
     //loading
     emit(NewsGetScienceLoadingState());
-    if (science.length == 0) {
-      DioHelper.getData(url: 'v2/top-headlines', query: {
-        'country': 'eg',
-        'category': 'science',
-        'apikey': '875465faa7d94a638da55e846be8701b',
-      }).then((value) {
-        science = value.data['articles'];
-
-        emit(NewsGetScienceSuccessState());
-        print('success');
-      }).catchError((error) {
-        emit(NewsGetScienceErrorState(error.toString()));
-        print('Error is : ${error.toString()}');
-      });
-    } else {
+    science = [];
+    DioHelper.getNews(category: scienceEndPoint).then((value) {
+      print('science value: $value');
+      var _model = NewsModel.fromJson(value.data);
+      science.addAll(_model.articles);
       emit(NewsGetScienceSuccessState());
-    }
+    }).catchError((error) {
+      emit(NewsGetScienceErrorState(error.toString()));
+      print('Error is : ${error.toString()}');
+    });
   }
 
   // List of business articles
-  List<dynamic> sports = [];
+  List<Article> sports = [];
 
   void getSports() {
     //loading
     emit(NewsGetSportsLoadingState());
-    if (sports.length == 0) {
-      DioHelper.getData(url: 'v2/top-headlines', query: {
-        'country': 'eg',
-        'category': 'sports',
-        'apikey': '875465faa7d94a638da55e846be8701b',
-      }).then((value) {
-        sports = value.data['articles'];
-
-        emit(NewsGetSportsSuccessState());
-        print('success ${sports.length}');
-      }).catchError((error) {
-        emit(NewsGetSportsErrorState(error.toString()));
-        print('Error is : ${error.toString()}');
-      });
-    } else {
+    sports = [];
+    DioHelper.getNews(
+      category: sportsEndPoint,
+    ).then((value) {
+      print('sports value: $value');
+      var _model = NewsModel.fromJson(value.data);
+      sports.addAll(_model.articles);
       emit(NewsGetSportsSuccessState());
-    }
+    }).catchError((error) {
+      emit(NewsGetSportsErrorState(error.toString()));
+      print('Error is : ${error.toString()}');
+    });
   }
 
   // List of business articles
-  List<dynamic> search = [];
+  List<Article> search = [];
 
   void getSearch({required String value}) {
     if (value != '') {
@@ -168,13 +151,9 @@ class NewsCubit extends Cubit<NewsStates> {
     // make the search list empty
     search = [];
 
-    DioHelper.getData(url: 'v2/everything', query: {
-      'q': '$value',
-      'sortBy': 'publishedAt',
-      'apikey': '875465faa7d94a638da55e846be8701b',
-    }).then((value) {
-      search = value.data['articles'];
-
+    DioHelper.searchNews(searchValue: value).then((value) {
+      var _model = NewsModel.fromJson(value.data);
+      search.addAll(_model.articles);
       emit(NewsGetSearchSuccessState());
       print('success ${search.length}');
     }).catchError((error) {
